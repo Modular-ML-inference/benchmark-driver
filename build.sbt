@@ -19,4 +19,20 @@ lazy val root = (project in file("."))
       "org.apache.pekko" %% "pekko-http" % pekkoHttpV,
       "org.apache.pekko" %% "pekko-http-core" % pekkoHttpV,
     ),
+
+    assembly / assemblyMergeStrategy := {
+      case PathList("module-info.class") => MergeStrategy.discard
+      case PathList("META-INF", xs @ _*) => (xs map {_.toLowerCase}) match {
+        case "services" :: xs => MergeStrategy.filterDistinctLines
+        case _ => MergeStrategy.discard
+      }
+      case PathList("reference.conf") => MergeStrategy.concat
+      case _ => MergeStrategy.first
+    },
+    assembly / assemblyOutputPath := file("target/assembly/benchmark-assembly.jar"),
+
+    // emit deprecated warnings
+    scalacOptions ++= Seq(
+      "-deprecation",
+    ),
   )
