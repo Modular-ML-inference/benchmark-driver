@@ -12,10 +12,6 @@ RUN sbt assembly
 FROM eclipse-temurin:21-jre-jammy
 MAINTAINER "Piotr Sowiński <piotr.sowinski@ibspan.waw.pl>"
 
-RUN apt update && \
-    apt install -y git wget && \
-    rm -rf /var/lib/apt/lists/*
-
 # Copy the executable jar
 COPY --from=builder /app/target/assembly/benchmark-assembly.jar /app/
 COPY bin/benchmark /usr/local/bin/benchmark
