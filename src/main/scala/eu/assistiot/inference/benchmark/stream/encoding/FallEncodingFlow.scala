@@ -10,12 +10,14 @@ case class FallInferenceInput(id: Int, windows: Seq[(Int, Int, Int)])
 case class FallInferenceOutput(id: Int, confidence: Float)
 
 object FallEncodingFlow extends MlEncodingFlow[FallInferenceInput, FallInferenceOutput]:
-  private val multiplier = 8000.0f / 2048.0f
+  // Moved to inference preprocessing
+  // TODO: remove
+  // private val multiplier = 8000.0f / 2048.0f
 
   private val shape = Some(TensorShapeProto(
     dim = Seq(
-      TensorShapeProto.Dim(size = 5, name = ""),
-      TensorShapeProto.Dim(size = 4, name = ""),
+      TensorShapeProto.Dim(size = 5),
+      TensorShapeProto.Dim(size = 4),
     )
   ))
 
@@ -25,18 +27,14 @@ object FallEncodingFlow extends MlEncodingFlow[FallInferenceInput, FallInference
         throw new IllegalArgumentException(
           f"Input for fall inference must have 5 windows, has ${input.windows.length}}"
         )
-      val flatTensor: Seq[Float] = input.windows.flatMap(window => {
-        val (x, y, z) = (window._1 * multiplier, window._2 * multiplier, window._3 * multiplier)
-        val mag = Math.sqrt(x * x + y * y + z * z).toFloat
-        Seq(x, y, z, mag)
-      })
+      val flatTensor: Seq[Int] = input.windows.flatMap(w => Seq(w._1, w._2, w._3))
       ExtendedInferenceRequest(
         id = input.id,
         input = Map(
           "acceleration" -> TensorProto(
             dtype = DataType.DT_FLOAT,
             tensorShape = shape,
-            floatVal = flatTensor
+            intVal = flatTensor,
           )
         )
       )
