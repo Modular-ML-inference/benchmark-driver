@@ -29,8 +29,10 @@ def main(): Unit =
     .zipWithIndex
     .map { case (xs, i) => CarInferenceRequest((i % 2_000_000_000).toInt, xs) }
     .via(CarEncodingFlow.encodeTensorFlow)
-    .runForeach(println)
+//    .runForeach(println)
+//
+//  Await.result(carStream, 15.seconds)
 
-  Await.result(carStream, 15.seconds)
+  MetricsCollector.writeAllToFiles(Path.of(f"out/${System.nanoTime}"))
 
 
