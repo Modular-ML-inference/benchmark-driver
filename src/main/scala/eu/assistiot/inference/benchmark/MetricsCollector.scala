@@ -5,14 +5,14 @@ import scala.collection.mutable
 
 object MetricsCollector:
   // (requestId, time)
-  val requestTimes = Metric[(Int, Long)]()
-  val responseTimes = Metric[(Int, Long)]()
+  val requestTime = Metric[(Int, Long)]()
+  val responseTime = Metric[(Int, Long)]()
   // (size, time)
   val inFlight = Metric[(Int, Long)]()
 
   val allMetrics = Seq(
-    "requestTimes" -> requestTimes,
-    "responseTimes" -> responseTimes,
+    "requestTime" -> requestTime,
+    "responseTime" -> responseTime,
     "inFlight" -> inFlight
   )
 

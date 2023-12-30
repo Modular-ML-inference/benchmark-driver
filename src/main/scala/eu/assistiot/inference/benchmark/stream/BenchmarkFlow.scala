@@ -14,7 +14,7 @@ object BenchmarkFlow:
         val i = (idx % 2_000_000_000).toInt
         inFlight += 1
         MetricsCollector.inFlight.add(inFlight, System.nanoTime())
-        MetricsCollector.requestTimes.add(i, System.nanoTime())
+        MetricsCollector.requestTime.add(i, System.nanoTime())
         (in, i)
       })
 
@@ -23,6 +23,6 @@ object BenchmarkFlow:
       .map((out, idx) => {
         inFlight -= 1
         MetricsCollector.inFlight.add(inFlight, System.nanoTime())
-        MetricsCollector.responseTimes.add(idx, System.nanoTime())
+        MetricsCollector.responseTime.add(idx, System.nanoTime())
         out
       })
