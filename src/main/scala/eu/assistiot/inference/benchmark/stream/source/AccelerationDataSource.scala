@@ -7,7 +7,6 @@ import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.util.ByteString
 
 import java.nio.file.Path
-import scala.concurrent.ExecutionContext
 
 object AccelerationDataSource:
   def fromPath(p: Path)(using mat: Materializer): Source[(Int, Int, Int), NotUsed] =

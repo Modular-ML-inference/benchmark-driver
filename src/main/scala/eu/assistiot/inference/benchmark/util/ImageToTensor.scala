@@ -6,17 +6,19 @@ import stream.encoding.CarEncodingFlow
 import java.awt.image.BufferedImage
 
 object ImageToTensor:
-  private val xy = 1200 * 900
+  private val x_size = 640
+  private val y_size = 640
+  private val xy = x_size * y_size
 
   def convert(image: BufferedImage): Seq[Int] =
     val pixels = Array.ofDim[Int](CarEncodingFlow.imageSize)
-    for (y <- 0 until 900) do
-      for (x <- 0 until 1200) do
+    for (y <- 0 until y_size) do
+      for (x <- 0 until x_size) do
         val r = image.getRGB(x, y) >> 16 & 0xFF
         val g = image.getRGB(x, y) >> 8 & 0xFF
         val b = image.getRGB(x, y) & 0xFF
-        pixels(y * 1200 + x) = r
-        pixels(xy + y * 1200 + x) = g
-        pixels(2 * xy + y * 1200 + x) = b
+        pixels(y * x_size + x) = r
+        pixels(xy + y * x_size + x) = g
+        pixels(2 * xy + y * x_size + x) = b
 
     pixels.toSeq

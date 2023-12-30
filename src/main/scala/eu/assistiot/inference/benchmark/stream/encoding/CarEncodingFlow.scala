@@ -5,7 +5,7 @@ import proto.*
 import org.apache.pekko.stream.scaladsl.*
 import org.tensorflow.framework.*
 
-// 3 * 900 * 1200 = 3 240 000 in length
+
 case class CarInferenceRequest(id: Int, images: Seq[Seq[Int]])
 
 case class CarInferenceResult(
@@ -18,7 +18,7 @@ case class CarInferenceResult(
 )
 
 object CarEncodingFlow extends MlEncodingFlow[CarInferenceRequest, CarInferenceResult]:
-  val imageSize = 3 * 900 * 1200
+  val imageSize = 3 * 640 * 640
 
   override def encodeTensorFlow = Flow[CarInferenceRequest].map { request =>
     if request.images.exists(_.length != imageSize) then
@@ -33,8 +33,8 @@ object CarEncodingFlow extends MlEncodingFlow[CarInferenceRequest, CarInferenceR
             dim = Seq(
               TensorShapeProto.Dim(size = request.images.length),
               TensorShapeProto.Dim(size = 3),
-              TensorShapeProto.Dim(size = 900),
-              TensorShapeProto.Dim(size = 1200),
+              TensorShapeProto.Dim(size = 640),
+              TensorShapeProto.Dim(size = 640),
             )
           )),
           intVal = request.images.flatten,
