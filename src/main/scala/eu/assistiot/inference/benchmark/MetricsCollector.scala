@@ -6,14 +6,21 @@ import scala.collection.mutable
 object MetricsCollector:
   // (requestId, time)
   val requestPrepareTime = Metric[(Int, Long)]()
+  val requestSentTime = Metric[(Int, Long)]()
+  val responseReceivedTime = Metric[(Int, Long)]()
   val responseDecodedTime = Metric[(Int, Long)]()
   // (size, time)
   val inFlight = Metric[(Int, Long)]()
+  // (requestId, confidence)
+  val fallConfidence = Metric[(Int, Float)]()
 
   val allMetrics = Seq(
-    "requestTime" -> requestPrepareTime,
-    "responseTime" -> responseDecodedTime,
-    "inFlight" -> inFlight
+    "requestPrepareTime" -> requestPrepareTime,
+    "requestSentTime" -> requestSentTime,
+    "responseReceivedTime" -> responseReceivedTime,
+    "responseDecodedTime" -> responseDecodedTime,
+    "inFlight" -> inFlight,
+    "fallConfidence" -> fallConfidence,
   )
 
   def writeAllToFiles(dir: Path): Unit =

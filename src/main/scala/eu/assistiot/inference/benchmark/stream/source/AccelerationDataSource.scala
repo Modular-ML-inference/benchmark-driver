@@ -24,3 +24,4 @@ object AccelerationDataSource:
       // Repeat the data forever
       .map(s => LazyList.continually(s.to(LazyList)).flatten)
       .mapConcat(identity)
+      .map(x => { println(x) ; x })

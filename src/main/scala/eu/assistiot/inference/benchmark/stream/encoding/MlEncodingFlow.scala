@@ -8,4 +8,4 @@ import org.apache.pekko.stream.scaladsl.*
 trait MlEncodingFlow[In, Out]:
   def encodeTensorFlow: Flow[In, ExtendedInferenceRequest, NotUsed]
 
-  def decodeTensorFlow: Flow[ExtendedInferenceResponse, Out, NotUsed]
+  def decodeTensorFlow: Flow[ExtendedInferenceResponse, (Out, Int), NotUsed]
