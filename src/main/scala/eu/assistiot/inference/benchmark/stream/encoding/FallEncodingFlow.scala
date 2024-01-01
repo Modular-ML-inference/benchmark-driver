@@ -30,7 +30,7 @@ object FallEncodingFlow extends MlEncodingFlow[FallInferenceInput, FallInference
           id = input.id,
           input = Map(
             "array" -> TensorProto(
-              dtype = DataType.DT_INT64,
+              dtype = DataType.DT_INT16,
               tensorShape = shape,
               intVal = flatTensor,
             )
