@@ -1,16 +1,16 @@
 package eu.assistiot.inference.benchmark
 
+import eu.assistiot.inference.benchmark.stream.encoding.*
+import eu.assistiot.inference.benchmark.stream.source.{AccelerationDataSource, ScratchesDataSource}
 import eu.assistiot.inference.benchmark.stream.{BenchmarkFlow, GrpcFlow}
 import eu.assistiot.inference.benchmark.util.GrpcConnector
-import stream.encoding.*
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.*
 import org.apache.pekko.stream.scaladsl.*
-import stream.source.{AccelerationDataSource, ScratchesDataSource}
 
 import java.nio.file.Path
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.*
+import scala.concurrent.{Await, ExecutionContext}
 
 @main
 def main(test: String, nClients: Int, intervalMillis: Int, requests: Long, host: String, port: Int): Unit =
@@ -45,23 +45,25 @@ Unit =
   given ExecutionContext = as.getDispatcher
   val data = AccelerationDataSource(Path.of("data/accel.csv"))
 
-  val futures = for i <- 0 until nClients yield
+  val sources = for i <- 0 until nClients yield
     val initialDelay = 1.second + (interval / nClients) * i
     val offset = 50 * i
 
-    val requestSource = data.newSource
+    data.newSource
       .drop(offset)
       .sliding(5)
       .via(BenchmarkFlow.requestPrepareFlow(i, initialDelay, interval, requests))
       .map { case (xs, i) => FallInferenceInput(i, xs) }
       .via(FallEncodingFlow.encodeTensorFlow)
+      .buffer(16, OverflowStrategy.backpressure)
 
-    GrpcFlow.request(requestSource)
-      .via(FallEncodingFlow.decodeTensorFlow)
-      .via(BenchmarkFlow.responseDecodedFlow)
-      .runForeach(println)
-      // .runWith(Sink.ignore)
-      .map(_ => println(f"Stream $i finished"))
+  val requestSource = sources.head.mergeAll(sources.tail, false)
 
-  Await.result(Future.sequence(futures), Duration.Inf)
+  val future = GrpcFlow.request(requestSource)
+    .via(FallEncodingFlow.decodeTensorFlow)
+    .via(BenchmarkFlow.responseDecodedFlow)
+    .runForeach(println)
+    // .runWith(Sink.ignore)
+
+  Await.result(future, Duration.Inf)
   println("All streams finished")

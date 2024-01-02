@@ -5,6 +5,8 @@ import java.util
 import scala.jdk.CollectionConverters.*
 
 object MetricsCollector:
+  // TODO: metrics for real time
+  
   // (requestId, time)
   val requestPrepareTime = Metric[(Int, Long)]()
   val requestSentTime = Metric[(Int, Long)]()
