@@ -14,25 +14,26 @@ import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
 @main
-def main(test: String, nClients: Int, intervalMillis: Int, requests: Long, host: String, port: Int): Unit =
+def main(test: String, arg: Int, intervalMillis: Int, requests: Long, host: String, port: Int): Unit =
   given as: ActorSystem = ActorSystem("benchmark")
   given GrpcConnector = GrpcConnector(host, port)
   given ExecutionContext = as.getDispatcher
 
   val interval = intervalMillis.milliseconds
+  val metricsDir = Path.of(f"out/${System.currentTimeMillis / 1000}")
 
   MetricsCollector.realTime.add((System.currentTimeMillis, System.nanoTime))
 
-  val metricsFuture = saveMetrics(Path.of(f"out/${System.currentTimeMillis / 1000}"))
+  val metricsFuture = saveMetrics(metricsDir)
   val streamFuture = if test == "car" then runCarTest(interval, requests)
-  else if test == "fall" then runFallTest(nClients, interval, requests)
+  else if test == "fall" then runFallTest(arg, interval, requests)
   else throw IllegalArgumentException(s"Unknown test: $test")
 
   metricsFuture.onComplete(_ => {
     println("Metrics saved")
-    System.exit(0)
   })
   streamFuture.onComplete(_ => {
+    MetricsCollector.writeAllToFiles(metricsDir)
     println("Done")
     System.exit(0)
   })
@@ -77,7 +78,7 @@ Future[Done] =
   val future = GrpcFlow.request(requestSource)
     .via(FallEncodingFlow.decodeTensorFlow)
     .via(BenchmarkFlow.responseDecodedFlow)
-    .runForeach(println)
-    // .runWith(Sink.ignore)
+    // .runForeach(println)
+    .runWith(Sink.ignore)
 
   future

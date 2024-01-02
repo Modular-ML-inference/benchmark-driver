@@ -1,6 +1,6 @@
 package eu.assistiot.inference.benchmark
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, StandardOpenOption}
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 
@@ -50,7 +50,7 @@ object MetricsCollector:
       toSave match
         case None => ()
         case Some(values) =>
-          val writer = java.nio.file.Files.newBufferedWriter(p)
+          val writer = java.nio.file.Files.newBufferedWriter(p, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
           try
             values.foreach { v =>
               writer.write(v.toString)
