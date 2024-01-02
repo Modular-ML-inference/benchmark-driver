@@ -7,21 +7,23 @@ import org.apache.pekko.stream.scaladsl.*
 import org.apache.pekko.util.ByteString
 
 import java.nio.file.Path
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
-object AccelerationDataSource:
-  def fromPath(p: Path)(using mat: Materializer): Source[(Int, Int, Int), NotUsed] =
-    val data = FileIO.fromPath(p)
-      .via(Framing.delimiter(ByteString("\n"), 1024, true).map(_.utf8String))
-      .drop(1)
-      .map(_.split(",").map(_.toInt))
-      .mapConcat(x => Seq(
-        (x(0), x(1), x(2)),
-        (x(3), x(4), x(5)),
-      ))
-      .runWith(Sink.seq)
-
-    Source.future(data)
-      // Repeat the data forever
-      .map(s => LazyList.continually(s.to(LazyList)).flatten)
-      .mapConcat(identity)
-      .map(x => { println(x) ; x })
+class AccelerationDataSource(p: Path)(using mat: Materializer):
+  private val dataFuture = FileIO.fromPath(p)
+    .via(Framing.delimiter(ByteString("\n"), 1024, true).map(_.utf8String))
+    .drop(1)
+    .map(_.split(",").map(_.toInt))
+    .mapConcat(x => Seq(
+      (x(0), x(1), x(2)),
+      (x(3), x(4), x(5)),
+    ))
+    .runWith(Sink.seq)
+  
+  private val data = LazyList.continually(
+    Await.result(dataFuture, Duration.Inf)
+  ).flatten
+  
+  def newSource: Source[(Int, Int, Int), NotUsed] =
+    Source.fromIterator(() => data.iterator)

@@ -1,7 +1,8 @@
 package eu.assistiot.inference.benchmark
 
 import java.nio.file.{Files, Path}
-import scala.collection.mutable
+import java.util
+import scala.jdk.CollectionConverters.*
 
 object MetricsCollector:
   // (requestId, time)
@@ -31,16 +32,16 @@ object MetricsCollector:
     }
 
   class Metric[T]:
-    private val values = mutable.ArrayBuffer[T]()
+    private val values = util.Vector[T]()
 
-    def add(value: T): Unit = values += value
+    def add(value: T): Unit = values.addElement(value)
 
-    def get: Seq[T] = values.toSeq
+    def get: Seq[T] = values.asScala.toSeq
 
     def writeToFile(p: Path): Unit =
       val writer = java.nio.file.Files.newBufferedWriter(p)
       try
-        values.foreach { v =>
+        values.asScala.foreach { v =>
           writer.write(v.toString)
           writer.newLine()
         }

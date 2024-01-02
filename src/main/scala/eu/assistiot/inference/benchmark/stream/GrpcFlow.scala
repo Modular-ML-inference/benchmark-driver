@@ -18,6 +18,10 @@ object GrpcFlow:
     randomFactor = 0.2,
   )
 
+//  val sink = MergeHub.source[ExtendedInferenceRequest](perProducerBufferSize = 16)
+//    .toMat(conn.client.predict)(Keep.left)
+//    .run()
+
   def request(s: Source[ExtendedInferenceRequest, NotUsed])(using conn: GrpcConnector):
   Source[ExtendedInferenceResponse, NotUsed] =
     val s2 = s.map(r => {
@@ -30,7 +34,7 @@ object GrpcFlow:
       r
     })
 
-    //RestartSource.withBackoff(restartSettings) { () =>
+    // RestartSource.withBackoff(restartSettings) { () =>
     conn.client.predict(s2)
       .map(r => {
         inFlight.synchronized {
