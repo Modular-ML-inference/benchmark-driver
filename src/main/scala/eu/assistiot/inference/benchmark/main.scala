@@ -4,31 +4,47 @@ import eu.assistiot.inference.benchmark.stream.encoding.*
 import eu.assistiot.inference.benchmark.stream.source.{AccelerationDataSource, ScratchesDataSource}
 import eu.assistiot.inference.benchmark.stream.{BenchmarkFlow, GrpcFlow}
 import eu.assistiot.inference.benchmark.util.GrpcConnector
+import org.apache.pekko.Done
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.*
 import org.apache.pekko.stream.scaladsl.*
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 import scala.concurrent.duration.*
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 @main
 def main(test: String, nClients: Int, intervalMillis: Int, requests: Long, host: String, port: Int): Unit =
-  given ActorSystem = ActorSystem("benchmark")
+  given as: ActorSystem = ActorSystem("benchmark")
+  given GrpcConnector = GrpcConnector(host, port)
+  given ExecutionContext = as.getDispatcher
 
   val interval = intervalMillis.milliseconds
 
-  if test == "car" then runCarTest(interval, requests)
+  MetricsCollector.realTime.add((System.currentTimeMillis, System.nanoTime))
+
+  val metricsFuture = saveMetrics(Path.of(f"out/${System.currentTimeMillis / 1000}"))
+  val streamFuture = if test == "car" then runCarTest(interval, requests)
   else if test == "fall" then runFallTest(nClients, interval, requests)
   else throw IllegalArgumentException(s"Unknown test: $test")
 
-  given GrpcConnector = GrpcConnector(host, port)
+  metricsFuture.onComplete(_ => {
+    println("Metrics saved")
+    System.exit(0)
+  })
+  streamFuture.onComplete(_ => {
+    println("Done")
+    System.exit(0)
+  })
 
-  println("Done")
-  MetricsCollector.writeAllToFiles(Path.of(f"out/${System.currentTimeMillis / 1000}"))
-  System.exit(0)
+def saveMetrics(dir: Path)(using ActorSystem): Future[Done] =
+  Files.createDirectories(dir)
+  Source.tick(5.seconds, 2.seconds, ())
+    .runForeach(_ => {
+      MetricsCollector.writeAllToFiles(dir)
+    })
 
-def runCarTest(interval: FiniteDuration, requests: Long)(using ActorSystem, GrpcConnector): Unit =
+def runCarTest(interval: FiniteDuration, requests: Long)(using ActorSystem, GrpcConnector): Future[Done] =
   val carStream = ScratchesDataSource.fromDir(Path.of("data"))
     .grouped(3)
     .via(BenchmarkFlow.requestPrepareFlow(0, interval, interval, requests))
@@ -38,11 +54,10 @@ def runCarTest(interval: FiniteDuration, requests: Long)(using ActorSystem, Grpc
 
   // TODO: gRPC client
 
-  Await.result(carStream, Duration.Inf)
+  carStream
 
-def runFallTest(nClients: Int, interval: FiniteDuration, requests: Long)(using as: ActorSystem, c: GrpcConnector):
-Unit =
-  given ExecutionContext = as.getDispatcher
+def runFallTest(nClients: Int, interval: FiniteDuration, requests: Long)(using ActorSystem, GrpcConnector):
+Future[Done] =
   val data = AccelerationDataSource(Path.of("data/accel.csv"))
 
   val sources = for i <- 0 until nClients yield
@@ -65,5 +80,4 @@ Unit =
     .runForeach(println)
     // .runWith(Sink.ignore)
 
-  Await.result(future, Duration.Inf)
-  println("All streams finished")
+  future
