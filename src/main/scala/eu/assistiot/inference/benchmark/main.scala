@@ -32,11 +32,16 @@ def main(test: String, arg: Int, intervalMillis: Int, requests: Long, host: Stri
   metricsFuture.onComplete(_ => {
     println("Metrics saved")
   })
-  streamFuture.onComplete(_ => {
-    MetricsCollector.writeAllToFiles(metricsDir)
-    println("Done")
-    System.exit(0)
-  })
+  streamFuture
+    .recover(e => {
+      println(s"Stream failed: $e")
+      e.printStackTrace()
+    })
+    .onComplete(_ => {
+      MetricsCollector.writeAllToFiles(metricsDir)
+      println("Done")
+      System.exit(0)
+    })
 
 def saveMetrics(dir: Path)(using ActorSystem): Future[Done] =
   Files.createDirectories(dir)
