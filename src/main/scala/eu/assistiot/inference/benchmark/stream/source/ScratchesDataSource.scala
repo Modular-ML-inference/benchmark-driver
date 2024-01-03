@@ -1,23 +1,26 @@
 package eu.assistiot.inference.benchmark.stream.source
 
 import eu.assistiot.inference.benchmark.util.ImageToTensor
-import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.*
-import org.apache.pekko.util.ByteString
 
 import java.nio.file.Path
 import javax.imageio.ImageIO
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 
-object ScratchesDataSource:
-  def fromDir(p: Path)(using mat: Materializer): Source[Seq[Int], NotUsed] =
-    val images = FileIO.fromPath(p.resolve("car_images.txt"))
-      .via(Framing.delimiter(ByteString("\n"), 1024, true).map(_.utf8String))
-      .map(p.resolve("car").resolve(_).toFile)
-      .map(ImageIO.read)
-      .map(ImageToTensor.convert)
-      .runWith(Sink.seq)
+class ScratchesDataSource(p: Path)(using mat: Materializer):
+  given ExecutionContext = mat.executionContext
+  private val dataFuture = Source(p.toFile.listFiles().toSeq)
+    .filter(f => f.isFile && f.getName.endsWith(".jpg"))
+    .map(ImageIO.read)
+    .async
+    // parallelize the conversion
+    .mapAsync(8)(i => Future {
+      ImageToTensor.convert(i)
+    })
+    .runWith(Sink.seq)
 
-    Source.future(images)
-      .map(s => LazyList.continually(s.to(LazyList)).flatten)
-      .mapConcat(identity)
+  private val data = Await.result(dataFuture, Duration.Inf)
+
+  def newSource = Source.fromIterator(() => LazyList.continually(data).flatten.iterator)

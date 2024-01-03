@@ -16,6 +16,8 @@ object MetricsCollector:
   val inFlight = Metric[(Int, Long)]()
   // (requestId, confidence)
   val fallConfidence = Metric[(Int, Float)]()
+  // (requestId, results vector)
+  val scratchesFound = Metric[(Int, Seq[Long])]()
 
   val allMetrics = Seq(
     "realTime" -> realTime,
@@ -25,6 +27,7 @@ object MetricsCollector:
     "responseDecodedTime" -> responseDecodedTime,
     "inFlight" -> inFlight,
     "fallConfidence" -> fallConfidence,
+    "scratchesFound" -> scratchesFound,
   )
 
   def writeAllToFiles(dir: Path): Unit =

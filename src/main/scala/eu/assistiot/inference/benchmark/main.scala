@@ -25,7 +25,7 @@ def main(test: String, arg: Int, intervalMillis: Int, requests: Long, host: Stri
   MetricsCollector.realTime.add((System.currentTimeMillis, System.nanoTime))
 
   val metricsFuture = saveMetrics(metricsDir)
-  val streamFuture = if test == "car" then runCarTest(interval, requests)
+  val streamFuture = if test == "car" then runCarTest(arg, interval, requests)
   else if test == "fall" then runFallTest(arg, interval, requests)
   else throw IllegalArgumentException(s"Unknown test: $test")
 
@@ -45,30 +45,45 @@ def saveMetrics(dir: Path)(using ActorSystem): Future[Done] =
       MetricsCollector.writeAllToFiles(dir)
     })
 
-def runCarTest(interval: FiniteDuration, requests: Long)(using ActorSystem, GrpcConnector): Future[Done] =
-  val carStream = ScratchesDataSource.fromDir(Path.of("data"))
-    .grouped(3)
-    .via(BenchmarkFlow.requestPrepareFlow(0, interval, interval, requests))
+def runCarTest(batchSize: Int, interval: FiniteDuration, requests: Long)(using ActorSystem, GrpcConnector):
+Future[Done] =
+  println("Loading data...")
+  val data = ScratchesDataSource(Path.of("data/car"))
+  println("Data loaded")
+
+  val tickSource = Source.tick(interval, interval, ())
+
+  val requestSource = data.newSource
+    .grouped(100)
+    .take(requests)
+    .zipWith(tickSource)((in, _) => in)
+    .mapConcat(_.grouped(batchSize).toSeq)
+    .via(BenchmarkFlow.requestPrepareFlow(0))
     .map { case (xs, i) => CarInferenceRequest(i, xs) }
     .via(CarEncodingFlow.encodeTensorFlow)
+    .buffer(4, OverflowStrategy.backpressure)
+    .wireTap(r => println(s"Sending request ${r.id}"))
+
+  GrpcFlow.request(requestSource)
+    .via(CarEncodingFlow.decodeTensorFlow)
+    .via(BenchmarkFlow.responseDecodedFlow)
+    .wireTap(println(_))
     .runWith(Sink.ignore)
-
-  // TODO: gRPC client
-
-  carStream
 
 def runFallTest(nClients: Int, interval: FiniteDuration, requests: Long)(using ActorSystem, GrpcConnector):
 Future[Done] =
   val data = AccelerationDataSource(Path.of("data/accel.csv"))
-
   val sources = for i <- 0 until nClients yield
     val initialDelay = 1.second + (interval / nClients) * i
     val offset = 50 * i
+    val tickSource = Source.tick(initialDelay, interval, ())
 
     data.newSource
       .drop(offset)
       .sliding(5)
-      .via(BenchmarkFlow.requestPrepareFlow(i, initialDelay, interval, requests))
+      .take(requests)
+      .zipWith(tickSource)((in, _) => in)
+      .via(BenchmarkFlow.requestPrepareFlow(i))
       .map { case (xs, i) => FallInferenceInput(i, xs) }
       .via(FallEncodingFlow.encodeTensorFlow)
       .buffer(16, OverflowStrategy.backpressure)

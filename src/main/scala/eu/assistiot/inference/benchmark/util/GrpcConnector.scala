@@ -5,11 +5,11 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.grpc.GrpcClientSettings
 
 class GrpcConnector(host: String, port: Int)(using ActorSystem):
-  private val clientSettings = GrpcClientSettings.connectToServiceAt(
-    host = host,
-    port = port,
-  ).withTls(false)
+  private val clientSettings = GrpcClientSettings
+    .connectToServiceAt(host, port)
+    .withTls(false)
+    .withChannelBuilderOverrides(_.maxInboundMessageSize(Int.MaxValue))
 
   // TODO: inverse broadcast
   val client = ExtendedInferenceServiceClient(clientSettings)
-    
+
