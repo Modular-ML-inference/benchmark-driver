@@ -7,9 +7,10 @@ Scala application posing as the client in benchmarks of the [Modular Inference S
 The easiest way to use this application is to use the provided Docker image:
 
 ```bash
-docker run -it --rm ghcr.io/modular-ml-inference/benchmark-driver:main \
+docker run -it --rm \
   -v /path/to/data:/worker/data \
   -v /path/to/results:/worker/out \
+  ghcr.io/modular-ml-inference/benchmark-driver:main \
   java -jar /app/benchmark-assembly.jar <args>
 ```
 
@@ -30,6 +31,10 @@ Where `<args>` are the arguments to the benchmark driver:
   - port – port to send requests to
 
 ### Data
+
+TODO
+
+### Benchmark scripts
 
 TODO
 
