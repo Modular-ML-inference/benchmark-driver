@@ -10,7 +10,7 @@ for device_num in $DEVICES
 do
   docker run -it --rm \
     -v ./data:/worker/data \
-    -v ./results:/worker/out \
+    -v ./out:/worker/out \
     ghcr.io/modular-ml-inference/benchmark-driver:main \
     java -jar /app/benchmark-assembly.jar fall "$device_num" 500 1800 "$1" "$2"
 
