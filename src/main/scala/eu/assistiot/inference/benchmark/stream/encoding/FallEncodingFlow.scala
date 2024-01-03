@@ -13,7 +13,7 @@ case class FallInferenceOutput(id: Int, confidence: Float)
 object FallEncodingFlow extends MlEncodingFlow[FallInferenceInput, FallInferenceOutput]:
   private val shape = Some(TensorShapeProto(
     dim = Seq(
-      TensorShapeProto.Dim(size = 5),
+      TensorShapeProto.Dim(size = 9),
       TensorShapeProto.Dim(size = 3),
     )
   ))
@@ -21,9 +21,9 @@ object FallEncodingFlow extends MlEncodingFlow[FallInferenceInput, FallInference
   override def encodeTensorFlow: Flow[FallInferenceInput, ExtendedInferenceRequest, NotUsed] =
     Flow[FallInferenceInput]
       .map(input => {
-        if input.windows.length != 5 then
+        if input.windows.length != 9 then
           throw new IllegalArgumentException(
-            f"Input for fall inference must have 5 windows, has ${input.windows.length}}"
+            f"Input for fall inference must have 9 windows, has ${input.windows.length}}"
           )
         val flatTensor: Seq[Int] = input.windows.flatMap(w => Seq(w._1, w._2, w._3))
         ExtendedInferenceRequest(

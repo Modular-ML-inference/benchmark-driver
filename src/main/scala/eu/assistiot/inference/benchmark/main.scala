@@ -80,11 +80,12 @@ Future[Done] =
 
     data.newSource
       .drop(offset)
-      .sliding(5)
+      .sliding(9)
       .take(requests)
       .zipWith(tickSource)((in, _) => in)
       .via(BenchmarkFlow.requestPrepareFlow(i))
       .map { case (xs, i) => FallInferenceInput(i, xs) }
+      // .wireTap(println(_))
       .via(FallEncodingFlow.encodeTensorFlow)
       .buffer(16, OverflowStrategy.backpressure)
 
@@ -93,7 +94,7 @@ Future[Done] =
   val future = GrpcFlow.request(requestSource)
     .via(FallEncodingFlow.decodeTensorFlow)
     .via(BenchmarkFlow.responseDecodedFlow)
-    // .runForeach(println)
+    // .wireTap(println(_))
     .runWith(Sink.ignore)
 
   future
