@@ -10,6 +10,7 @@ import org.apache.pekko.stream.*
 import org.apache.pekko.stream.scaladsl.*
 
 import java.nio.file.{Files, Path}
+import java.util.UUID
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,7 +21,7 @@ def main(test: String, arg: Int, intervalMillis: Int, requests: Long, host: Stri
   given ExecutionContext = as.getDispatcher
 
   val interval = intervalMillis.milliseconds
-  val metricsDir = Path.of(f"out/${System.currentTimeMillis / 1000}")
+  val metricsDir = Path.of(f"out/${System.currentTimeMillis / 1000}_${UUID.randomUUID.toString.substring(0, 8)}")
 
   MetricsCollector.realTime.add((System.currentTimeMillis, System.nanoTime))
 
