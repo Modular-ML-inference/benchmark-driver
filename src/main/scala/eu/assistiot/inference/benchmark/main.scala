@@ -24,6 +24,14 @@ def main(test: String, arg: Int, intervalMillis: Int, requests: Long, host: Stri
   val metricsDir = Path.of(f"out/${System.currentTimeMillis / 1000}_${UUID.randomUUID.toString.substring(0, 8)}")
 
   MetricsCollector.realTime.add((System.currentTimeMillis, System.nanoTime))
+  MetricsCollector.parameters.add(Map(
+    "test" -> test,
+    "arg" -> arg.toString,
+    "intervalMillis" -> intervalMillis.toString,
+    "requests" -> requests.toString,
+    "host" -> host,
+    "port" -> port.toString,
+  ))
 
   val metricsFuture = saveMetrics(metricsDir)
   val streamFuture = if test == "car" then runCarTest(arg, interval, requests)
