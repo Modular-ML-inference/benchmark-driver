@@ -18,6 +18,8 @@ object MetricsCollector:
   val fallConfidence = Metric[(Int, Float)]()
   // (requestId, results vector)
   val scratchesFound = Metric[(Int, Seq[Long])]()
+  // (images, time)
+  val imagesInRequest = Metric[(Int, Long)]()
   val parameters = Metric[Map[String, String]]()
 
   val allMetrics = Seq(
@@ -29,6 +31,7 @@ object MetricsCollector:
     "inFlight" -> inFlight,
     "fallConfidence" -> fallConfidence,
     "scratchesFound" -> scratchesFound,
+    "imagesInRequest" -> imagesInRequest,
     "parameters" -> parameters,
   )
 

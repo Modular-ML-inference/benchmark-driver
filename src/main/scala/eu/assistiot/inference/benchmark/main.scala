@@ -13,6 +13,7 @@ import java.nio.file.{Files, Path}
 import java.util.UUID
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 @main
 def main(test: String, arg: Int, intervalMillis: Int, requests: Long, host: String, port: Int): Unit =
@@ -68,8 +69,10 @@ Future[Done] =
   val tickSource = Source.tick(interval, interval, ())
 
   val requestSource = data.newSource
-    .grouped(100)
+    .grouped(200)
+    .map(images => Random.shuffle(images).take(Random.between(50, 301)))
     .take(requests)
+    .wireTap(xs => MetricsCollector.imagesInRequest.add((xs.size, System.nanoTime())))
     .zipWith(tickSource)((in, _) => in)
     .mapConcat(_.grouped(batchSize).toSeq)
     .via(BenchmarkFlow.requestPrepareFlow(0))
