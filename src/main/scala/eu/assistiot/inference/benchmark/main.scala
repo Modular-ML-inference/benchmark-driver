@@ -69,7 +69,7 @@ Future[Done] =
   val tickSource = Source.tick(interval, interval, ())
 
   val requestSource = data.newSource
-    .grouped(200)
+    .grouped(300)
     .map(images => Random.shuffle(images).take(Random.between(50, 301)))
     .take(requests)
     .wireTap(xs => MetricsCollector.imagesInRequest.add((xs.size, System.nanoTime())))
@@ -78,7 +78,7 @@ Future[Done] =
     .via(BenchmarkFlow.requestPrepareFlow(0))
     .map { case (xs, i) => CarInferenceRequest(i, xs) }
     .via(CarEncodingFlow.encodeTensorFlow)
-    .buffer(4, OverflowStrategy.backpressure)
+    .buffer(350, OverflowStrategy.backpressure)
     .wireTap(r => println(s"Sending request ${r.id}"))
 
   GrpcFlow.request(requestSource)
