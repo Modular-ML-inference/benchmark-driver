@@ -24,19 +24,32 @@ Where `<args>` are the arguments to the benchmark driver:
   - host – host to send requests to
   - port – port to send requests to
 - For `car`:
-  - batchSize – size of each batch
-  - intervalMillis – interval between batches in milliseconds
-  - nBatches – number of batches to generate
+  - batchSize – size of batches sent to the MIS
+  - intervalMillis – interval between vehicle scans in milliseconds
+  - nBatches – number of vehicle scans to generate
   - host – host to send requests to
   - port – port to send requests to
 
 ### Data
 
-TODO
+The inference data should be placed in the `/worker/data` directory of the container. The directory structure should be as follows:
+
+- `/worker/data`
+  - `accel.csv` – acceleration data, downloaded from [here](https://github.com/Modular-ML-inference/ml-usecase/blob/main/fall_detection/data/test_accel.csv)
+  - `car` – directory containing the subset of the [CarDD dataset](https://cardd-ustc.github.io/), obtained using the instructions [here](https://github.com/Modular-ML-inference/ml-usecase).
 
 ### Benchmark scripts
 
-TODO
+The `bin` directory contains Bash scripts useful for reproducing the experiments from the paper. The scripts use the aforementioned Docker container and assume that the data is placed in the `./data` directory on the host machine, the results are then saved in the `./out` directory.
+
+- `fall.sh` – fall detection benchmark, using only one client at a time (used in the tests with the GWEN).
+- `fall_multiple.sh` – fall detection benchmark, using multiple clients at a time (used in the tests with the x86-64 server).
+- `car.sh` – scratch detection benchmark.
+
+All scripts take two positional arguments:
+
+- Hostname/IP of the Modular Inference Server
+- Port of the Modular Inference Server
 
 ### Examples
 
@@ -44,9 +57,9 @@ TODO
     ```bash
     java -jar /app/benchmark-assembly.jar fall 10 500 100 10.0.0.2 8080
     ```
-- Run the `car` test with 5 images per batch, 2 minutes (120000 ms) between batches, 100 batches, sending to `localhost:8080`:
+- Run the `car` test with 4 images per batch, 3 minutes (180000 ms) between scans, 15 vehicle scans, sending to `localhost:8080`:
     ```bash
-    java -jar /app/benchmark-assembly.jar car 5 120000 100 10.0.0.2 8080
+    java -jar /app/benchmark-assembly.jar car 4 180000 15 10.0.0.2 8080
     ```
 
 ## Authors

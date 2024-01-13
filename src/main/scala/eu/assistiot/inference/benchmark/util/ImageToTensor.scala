@@ -2,7 +2,6 @@ package eu.assistiot.inference.benchmark
 package util
 
 import com.google.protobuf.ByteString
-import stream.encoding.CarEncodingFlow
 
 import java.awt.image.BufferedImage
 

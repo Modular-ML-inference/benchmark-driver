@@ -3,7 +3,7 @@
 set -eux
 
 DEVICES="10 40 160"
-CLIENTS="$3"
+CLIENTS="1 4 16"
 
 docker pull ghcr.io/modular-ml-inference/benchmark-driver:main
 

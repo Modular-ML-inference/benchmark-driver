@@ -10,6 +10,5 @@ class GrpcConnector(host: String, port: Int)(using ActorSystem):
     .withTls(false)
     .withChannelBuilderOverrides(_.maxInboundMessageSize(Int.MaxValue))
 
-  // TODO: inverse broadcast
   val client = ExtendedInferenceServiceClient(clientSettings)
 

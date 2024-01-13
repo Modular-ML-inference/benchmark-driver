@@ -3,7 +3,7 @@
 set -eux
 
 BATCHES="1 4 16"
-CLIENTS="1 4 16"
+CLIENTS="1 2 4"
 
 docker pull ghcr.io/modular-ml-inference/benchmark-driver:main
 
