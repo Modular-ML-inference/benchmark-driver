@@ -1,6 +1,6 @@
 # benchmark-driver
 
-Scala application posing as the client in benchmarks of the [Modular Inference Server](https://github.com/Modular-ML-inference/inference-server).
+Scala application posing as the client in benchmarks of the [Modular Inference Server](https://github.com/Modular-ML-inference/inference-server). More benchmark details can be found in ["Flexible Deployment of Machine Learning Inference Pipelines in the Cloud–Edge–IoT Continuum"](https://www.mdpi.com/2079-9292/13/10/1888). 
 
 ## Usage
 
@@ -64,6 +64,12 @@ All scripts take two positional arguments:
 ## Citation
 
 If you found the benchmark-driver useful, please consider starring ⭐ us on GitHub and citing 📚 us in your research!
+
+```
+Bogacka, K.; Sowiński, P.; Danilenka, A.; Biot, F.M.; Wasielewska-Michniewska, K.; Ganzha, M.; Paprzycki, M.; Palau, C.E.
+Flexible Deployment of Machine Learning Inference Pipelines in the Cloud–Edge–IoT Continuum.
+Electronics 2024, 13, 1888. https://doi.org/10.3390/electronics13101888 
+```
 
 ```bibtex
 @Article{electronics13101888,
